@@ -3,8 +3,10 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "/home/tyspice/Repositories/pico/pico-sdk/**"
+                "${workspaceFolder}",
+                "/home/tyspice/Repositories/pico/pico-sdk",
+                "${workspaceFolder}/external/FreeRTOS-Kernel/include",
+                "${workspaceFolder}/external/FreeRTOS-Kernel/portable/ARMv8M/non_secure/portable/GCC/ARM_CM23"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
