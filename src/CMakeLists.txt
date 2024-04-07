@@ -1,6 +1,7 @@
 add_executable(${NAME}
     main.cpp
     WifiHelper.cpp
+    MQTTClient.cpp
 )
 
 target_include_directories(${NAME} PRIVATE
