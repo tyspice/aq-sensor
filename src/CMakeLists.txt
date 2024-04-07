@@ -1,5 +1,6 @@
 add_executable(${NAME}
     main.cpp
+    WifiHelper.cpp
 )
 
 target_include_directories(${NAME} PRIVATE

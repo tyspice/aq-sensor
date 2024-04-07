@@ -7,6 +7,7 @@
 #include "lwip/altcp.h"
 #include "lwip/apps/mqtt.h"
 #include "task.h"
+#include "WifiHelper.h"
 
 #define TEST_TASK_PRIORITY				( tskIDLE_PRIORITY )
 
@@ -21,19 +22,7 @@ void mqtt_request_cb(void *arg, err_t error) {
 }
 
 void main_task(void *params) {
-  if (cyw43_arch_init()) {
-    std::cout << "failed to initialise WIFI peripheral" << std::endl;
-  }
-  
-  cyw43_arch_enable_sta_mode();
-
-  std::cout << "Connecting to WIFI..." << std::endl;
-
-  if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000)) {
-    std::cout << "Failed to connect" << std::endl;
-  } else {
-    std::cout << "Connected" << std::endl;
-  }
+  bool wifiReady = WifiHelper::init();
 
   mqtt_client_t *client = mqtt_client_new();
   struct mqtt_connect_client_info_t ci;
