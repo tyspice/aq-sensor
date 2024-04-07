@@ -12,7 +12,7 @@ target_include_directories(${NAME} PRIVATE
 target_link_libraries(${NAME}
     pico_stdlib
     hardware_gpio
-	  FreeRTOS-Kernel-Heap4
+	FreeRTOS-Kernel-Heap4
     pico_cyw43_arch_lwip_sys_freertos
     pico_lwip_mqtt
 )

@@ -3,16 +3,17 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}",
-                "/home/tyspice/Repositories/pico/pico-sdk",
-                "${workspaceFolder}/external/FreeRTOS-Kernel/include",
-                "${workspaceFolder}/external/FreeRTOS-Kernel/portable/ARMv8M/non_secure/portable/GCC/ARM_CM23"
+                "${workspaceFolder}/external/FreeRTOS-Kernel/include/**",
+                "${workspaceFolder}/**",
+                "${env:PICO_SDK_PATH}/**",
+                "${workspaceFolder}/external/FreeRTOS-Kernel/portable/ThirdParty/GCC/RP2040/include/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/gcc",
+            "compilerPath": "/usr/bin/arm-none-eabi-gcc",
             "cStandard": "c17",
             "cppStandard": "gnu++17",
-            "intelliSenseMode": "linux-gcc-x64"
+            "intelliSenseMode": "linux-gcc-arm",
+            "configurationProvider" : "ms-vscode.cmake-tools"
         }
     ],
     "version": 4
