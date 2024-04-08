@@ -35,12 +35,26 @@ public:
   MQTTClient(string clientId, string brokerAddr, u16_t port, string username, string password, u16_t keepAlive, mqtt_connection_cb_t cb);
 
   /**
-   * @brief Publishes a message to the specified topic.
+   * Publishes a message to the MQTT broker.
+   *
    * @param topic The topic to publish the message to.
    * @param payload The payload of the message.
-   * @param qos The quality of service level for the message.
-   * @param retain Whether the message should be retained by the broker.
-   * @return An error code indicating the success or failure of the publish operation.
+   * @param qos The quality of service level for the message (default is 0).
+   * @param retain Whether the message should be retained by the broker (default is 0).
+   * @return An error code indicating the success or failure of the operation.
    */
-  err_t publish(string topic, string payload, u8_t qos, u8_t retain);
+  err_t publish(string topic, string payload, u8_t qos = 0, u8_t retain = 0);
+
+  /**
+   * Publishes a message to the MQTT broker.
+   *
+   * @param topic   The MQTT topic to publish the message to.
+   * @param payload The message payload to be published.
+   * @param qos     The quality of service level for the message (0, 1, or 2).
+   * @param retain  Whether the message should be retained by the broker.
+   * @param cb      The callback function to be called when the publish operation completes.
+   * @param arg     An optional argument to be passed to the callback function.
+   * @return        An error code indicating the success or failure of the publish operation.
+   */
+  err_t publish(string topic, string payload, u8_t qos, u8_t retain, mqtt_request_cb_t cb, void *arg);
 };

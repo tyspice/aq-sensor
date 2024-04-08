@@ -26,7 +26,7 @@ MQTTClient::MQTTClient() {
   m_ci.keep_alive = MQTT_KEEP_ALIVE;
   m_ci.client_user = MQTT_USER;
   m_ci.client_pass = MQTT_PASSWD;
-  mqtt_client_connect(m_client, &m_ip, MQTT_PORT, defaultConnectCB, NULL, &m_ci);
+  mqtt_client_connect(m_client, &m_ip, MQTT_BROKER_PORT, defaultConnectCB, NULL, &m_ci);
 };
 
 MQTTClient::MQTTClient(string clientId, string brokerAddr, u16_t port, string username, string password, u16_t keepAlive, mqtt_connection_cb_t cb) {
@@ -40,7 +40,11 @@ MQTTClient::MQTTClient(string clientId, string brokerAddr, u16_t port, string us
   mqtt_client_connect(m_client, &m_ip, port, cb, NULL, &m_ci);
 }
 
-err_t MQTTClient::publish(string topic, string payload, u8_t qos = 0, u8_t retain = 0) {
+err_t MQTTClient::publish(string topic, string payload, u8_t qos, u8_t retain) {
   return mqtt_publish(m_client, topic.c_str(), payload.c_str(), payload.length(), qos, retain, defaultPublishCB, m_client);
+}
+
+err_t MQTTClient::publish(string topic, string payload, u8_t qos, u8_t retain, mqtt_request_cb_t cb, void *arg) {
+  return mqtt_publish(m_client, topic.c_str(), payload.c_str(), payload.length(), qos, retain, cb, arg);
 }
 

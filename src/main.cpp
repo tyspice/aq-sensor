@@ -10,7 +10,7 @@ void main_task(void *params) {
   MQTTClient mqttClient;
 
   while(1) {
-    err_t err = mqttClient.publish(string("Hello"), string("World"), 0, 0);
+    err_t err = mqttClient.publish(string("Hello"), string("World"));
     vTaskDelay(1000);
   }
 }
