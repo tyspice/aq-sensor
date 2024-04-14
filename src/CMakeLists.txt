@@ -6,9 +6,11 @@ add_executable(${NAME}
 
 target_include_directories(${NAME} PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/..
+    ${CMAKE_CURRENT_LIST_DIR}/../config
     ${CMAKE_CURRENT_LIST_DIR}/../secrets
 )
+
+
 
 # Add pico_stdlib library which aggregates commonly used features
 target_link_libraries(${NAME}
