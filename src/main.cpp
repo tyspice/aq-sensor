@@ -1,5 +1,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 #include <iostream>
 #include <algorithm>
 #include "pico/cyw43_arch.h"
@@ -20,6 +21,8 @@ using std::string;
 #define STATUS_MONITOR_TSK_P tskIDLE_PRIORITY + 2U
 #define PUBLISHER_TSK_P tskIDLE_PRIORITY + 3U
 #define BME_READER_TSK_P tskIDLE_PRIORITY + 5U
+
+QueueHandle_t bmeDataQueue;
 
 BME68X_INTF_RET_TYPE i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr) {
   i2c_write_blocking(i2c0, BME68X_I2C_ADDR_LOW, &reg_addr, 1, true);
@@ -79,31 +82,27 @@ void bmeReader(void* params) {
   heatr_conf.heatr_temp = 300;
   heatr_conf.heatr_dur = 100;
   rslt = bme68x_set_heatr_conf(BME68X_FORCED_MODE, &heatr_conf, &bme);
-  
-  printf("Sample, Temperature(deg C), Pressure(Pa), Humidity(%%), Gas resistance(ohm), Status\n");
 
   for ( ;; ) {
     rslt = bme68x_set_op_mode(BME68X_FORCED_MODE, &bme);
     del_period = bme68x_get_meas_dur(BME68X_FORCED_MODE, &conf, &bme) + (heatr_conf.heatr_dur * 1000);
     bme.delay_us(del_period, bme.intf_ptr);
     rslt = bme68x_get_data(BME68X_FORCED_MODE, &data, &n_fields, &bme);
-
-    printf("%.2f, %.2f, %.2f, %.2f, 0x%x\n",
-        data.temperature,
-        data.pressure,
-        data.humidity,
-        data.gas_resistance,
-        data.status);
-    
+    xQueueSend(bmeDataQueue, &data, 0);
     vTaskDelay(5000);
   }
 }
 
 void publisher(void* params) {
   MQTTClient* mqttClient = static_cast<MQTTClient*>(params);
-  for ( ;; ) {
-    err_t err = mqttClient->publish(string("Hello"), string("World"));
-    vTaskDelay(5000);
+  struct bme68x_data bmeData;
+  for (;;)
+  {
+    if(xQueueReceive(bmeDataQueue, &bmeData, 0)) {
+      string temp = std::to_string(bmeData.temperature);
+      err_t err = mqttClient->publish(string("Temp"), temp);
+    }
+    vTaskDelay(1000);
   }
 }
 
@@ -120,6 +119,7 @@ void statusMonitor(void* params) {
 
 void mainTask(void *params) {
   bool wifiReady = WifiHelper::init();
+  bmeDataQueue = xQueueCreate(5, sizeof(bme68x_data));
   MQTTClient mqttClient;
 
   TaskHandle_t publisherTaskHandle;
