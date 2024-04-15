@@ -9,7 +9,7 @@
 #include "MQTTClient.h"
 #include "hardware/i2c.h"
 #include "bme68x/bme68x.h"
-using std::string;
+#include "nlohmann/json.hpp"
 
 #define BAUD_RATE 100 * 1000
 // hardware config
@@ -21,6 +21,9 @@ using std::string;
 #define STATUS_MONITOR_TSK_P tskIDLE_PRIORITY + 2U
 #define PUBLISHER_TSK_P tskIDLE_PRIORITY + 3U
 #define BME_READER_TSK_P tskIDLE_PRIORITY + 5U
+
+using std::string;
+using json = nlohmann::json;
 
 QueueHandle_t bmeDataQueue;
 
@@ -40,6 +43,15 @@ BME68X_INTF_RET_TYPE i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32
 
 void delay_us(uint32_t period, void *intf_ptr) {
   sleep_us(period);
+}
+
+string jsonStringify(const bme68x_data &data) {
+  json j;
+  j["temperature"] = data.temperature;
+  j["pressure"] = data.pressure;
+  j["humidity"] = data.humidity;
+  j["gasResistance"] = data.gas_resistance;
+  return j.dump();
 }
 
 void bmeReader(void* params) {
@@ -99,8 +111,7 @@ void publisher(void* params) {
   for (;;)
   {
     if(xQueueReceive(bmeDataQueue, &bmeData, 0)) {
-      string temp = std::to_string(bmeData.temperature);
-      err_t err = mqttClient->publish(string("Temp"), temp);
+      err_t err = mqttClient->publish(string("data"), jsonStringify(bmeData));
     }
     vTaskDelay(1000);
   }
@@ -126,7 +137,7 @@ void mainTask(void *params) {
   TaskHandle_t statusMonitorTaskHandle;
   TaskHandle_t bmeReaderTaskHandle;
 
-  xTaskCreate(publisher, "publisher", configMINIMAL_STACK_SIZE, &mqttClient, PUBLISHER_TSK_P, &publisherTaskHandle);
+  xTaskCreate(publisher, "publisher", configMINIMAL_STACK_SIZE * 2, &mqttClient, PUBLISHER_TSK_P, &publisherTaskHandle);
   xTaskCreate(statusMonitor, "statusMonitor", configMINIMAL_STACK_SIZE, &mqttClient, STATUS_MONITOR_TSK_P, &statusMonitorTaskHandle);
   xTaskCreate(bmeReader, "bmeReader", configMINIMAL_STACK_SIZE, NULL, BME_READER_TSK_P, &bmeReaderTaskHandle);
 
