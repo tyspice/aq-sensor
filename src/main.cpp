@@ -111,7 +111,7 @@ void publisher(void* params) {
   for (;;)
   {
     if(xQueueReceive(bmeDataQueue, &bmeData, 0)) {
-      err_t err = mqttClient->publish(string("data"), jsonStringify(bmeData));
+      err_t err = mqttClient->publish(string("data/home/indoor/airQuality"), jsonStringify(bmeData));
     }
     vTaskDelay(1000);
   }
