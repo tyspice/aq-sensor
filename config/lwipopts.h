@@ -88,6 +88,13 @@
 #define SLIP_DEBUG                  LWIP_DBG_OFF
 #define DHCP_DEBUG                  LWIP_DBG_OFF
 
+#define SNTP_MAX_SERVERS            1
+#define SNTP_SUPPORT                1
+#define SNTP_UPDATE_DELAY           (60 * 1000)
+#define SNTP_SET_SYSTEM_TIME_NTP(sec, us) \
+  void SNTPSetRTC(u32_t, u32_t); \
+  SNTPSetRTC(sec, us)
+
 #define LWIP_ALTCP                  1
 #define MEMP_NUM_SYS_TIMEOUT        (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 1)
 #define MQTT_REQ_MAX_IN_FLIGHT      (5)

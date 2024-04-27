@@ -1,22 +1,21 @@
 #pragma once
 
 #include "hardware/rtc.h"
+#include <time.h>
 
 /**
  * Namespace containing helper functions for managing date and time.
  */
 namespace TimeHelper {
   /**
-   * Initializes the TimeHelper module by calling rtc_init().
+   * Initializes the TimeHelper module.
    */
   void init();
 
   /**
-   * Sets the current date and time.
-   * 
-   * @param t Pointer to a datetime_t struct containing the desired date and time.
+   * Get the current number of seconds since the Unix epoch (January 1, 1970).
    */
-  void setDateTime(datetime_t* t);
+  time_t getUnixTimestamp();
 
   /**
    * Retrieves the current date and time.

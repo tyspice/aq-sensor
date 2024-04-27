@@ -24,6 +24,7 @@ target_link_libraries(${NAME}
 	FreeRTOS-Kernel-Heap4
     pico_cyw43_arch_lwip_sys_freertos
     pico_lwip_mqtt
+    pico_lwip_sntp
     bme68xLib
 )
 
