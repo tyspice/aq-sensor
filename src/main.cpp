@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
+#include <tuple>
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 #include "WifiHelper.h"
@@ -48,9 +49,10 @@ void delay_us(uint32_t period, void *intf_ptr) {
   sleep_us(period);
 }
 
-string preparePayload(const bme68x_data &data) {
+string preparePayload(const std::tuple<time_t, bme68x_data> &bmeData) {
+  const time_t &timestamp = std::get<0>(bmeData);
+  const bme68x_data &data = std::get<1>(bmeData);
   const char *id = MQTT_CLIENT;
-  time_t timestamp = TimeHelper::getUnixTimestamp();
   json arr;
   json d;
 
@@ -95,6 +97,7 @@ void bmeReader(void* params) {
   struct bme68x_conf conf;
   struct bme68x_heatr_conf heatr_conf;
   struct bme68x_data data;
+  std::tuple<time_t, bme68x_data> sendPacket;
   uint32_t del_period;
   uint32_t time_ms = 0;
   uint8_t n_fields;
@@ -128,14 +131,15 @@ void bmeReader(void* params) {
     del_period = bme68x_get_meas_dur(BME68X_FORCED_MODE, &conf, &bme) + (heatr_conf.heatr_dur * 1000);
     bme.delay_us(del_period, bme.intf_ptr);
     rslt = bme68x_get_data(BME68X_FORCED_MODE, &data, &n_fields, &bme);
-    xQueueSend(bmeDataQueue, &data, 0);
+    sendPacket = std::make_tuple(TimeHelper::getUnixTimestamp(), data);
+    xQueueSend(bmeDataQueue, &sendPacket, 0);
     vTaskDelay(5000);
   }
 }
 
 void publisher(void* params) {
   auto mqttClient = *static_cast<std::shared_ptr<MQTTClient>*>(params);
-  struct bme68x_data bmeData;
+  std::tuple<time_t, bme68x_data> bmeData;
   for (;;)
   {
     if(xQueueReceive(bmeDataQueue, &bmeData, 0)) {
@@ -159,7 +163,7 @@ void statusMonitor(void* params) {
 void mainTask(void *params) {
   bool wifiReady = WifiHelper::init();
   TimeHelper::init();
-  bmeDataQueue = xQueueCreate(5, sizeof(bme68x_data));
+  bmeDataQueue = xQueueCreate(10, sizeof(std::tuple<time_t, bme68x_data>));
   auto mqttClient = std::make_shared<MQTTClient>();
 
   TaskHandle_t publisherTaskHandle;
