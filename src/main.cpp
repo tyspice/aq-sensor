@@ -3,6 +3,7 @@
 #include "queue.h"
 #include <iostream>
 #include <algorithm>
+#include <memory>
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 #include "WifiHelper.h"
@@ -133,7 +134,7 @@ void bmeReader(void* params) {
 }
 
 void publisher(void* params) {
-  MQTTClient* mqttClient = static_cast<MQTTClient*>(params);
+  auto mqttClient = *static_cast<std::shared_ptr<MQTTClient>*>(params);
   struct bme68x_data bmeData;
   for (;;)
   {
@@ -145,7 +146,7 @@ void publisher(void* params) {
 }
 
 void statusMonitor(void* params) {
-  MQTTClient* mqttClient = static_cast<MQTTClient*>(params);
+  auto mqttClient = *static_cast<std::shared_ptr<MQTTClient>*>(params);
   // Display WIFI and MQTT connection statuses via onboard LED
   for ( ;; ) {
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
@@ -159,7 +160,7 @@ void mainTask(void *params) {
   bool wifiReady = WifiHelper::init();
   TimeHelper::init();
   bmeDataQueue = xQueueCreate(5, sizeof(bme68x_data));
-  MQTTClient mqttClient;
+  auto mqttClient = std::make_shared<MQTTClient>();
 
   TaskHandle_t publisherTaskHandle;
   TaskHandle_t statusMonitorTaskHandle;
@@ -169,7 +170,7 @@ void mainTask(void *params) {
   xTaskCreate(statusMonitor, "statusMonitor", configMINIMAL_STACK_SIZE, &mqttClient, STATUS_MONITOR_TSK_P, &statusMonitorTaskHandle);
   xTaskCreate(bmeReader, "bmeReader", configMINIMAL_STACK_SIZE, NULL, BME_READER_TSK_P, &bmeReaderTaskHandle);
 
-  while(1) { vTaskDelay(1000000); }
+  vTaskDelete(NULL);
 }
 
 int main() {
