@@ -6,6 +6,7 @@
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 #include "WifiHelper.h"
+#include "TimeHelper.h"
 #include "MQTTClient.h"
 #include "hardware/i2c.h"
 #include "bme68x/bme68x.h"
@@ -47,6 +48,7 @@ void delay_us(uint32_t period, void *intf_ptr) {
 
 string jsonStringify(const bme68x_data &data) {
   json j;
+  j["timestamp"] = TimeHelper::getUnixTimestamp();
   j["temperature"] = data.temperature;
   j["pressure"] = data.pressure;
   j["humidity"] = data.humidity;
@@ -130,6 +132,7 @@ void statusMonitor(void* params) {
 
 void mainTask(void *params) {
   bool wifiReady = WifiHelper::init();
+  TimeHelper::init();
   bmeDataQueue = xQueueCreate(5, sizeof(bme68x_data));
   MQTTClient mqttClient;
 

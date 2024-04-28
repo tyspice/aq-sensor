@@ -96,7 +96,7 @@
   SNTPSetRTC(sec, us)
 
 #define LWIP_ALTCP                  1
-#define MEMP_NUM_SYS_TIMEOUT        (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 1)
+#define MEMP_NUM_SYS_TIMEOUT        (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 2)
 #define MQTT_REQ_MAX_IN_FLIGHT      (5)
 
 #if !NO_SYS
