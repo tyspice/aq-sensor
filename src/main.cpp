@@ -11,6 +11,7 @@
 #include "hardware/i2c.h"
 #include "bme68x/bme68x.h"
 #include "nlohmann/json.hpp"
+#include "secrets.h"
 
 #define BAUD_RATE 100 * 1000
 // hardware config
@@ -46,13 +47,37 @@ void delay_us(uint32_t period, void *intf_ptr) {
   sleep_us(period);
 }
 
-string jsonStringify(const bme68x_data &data) {
+string preparePayload(const bme68x_data &data) {
+  const char *id = MQTT_CLIENT;
+  time_t timestamp = TimeHelper::getUnixTimestamp();
+  json arr;
+  json d;
+
+  d["field"] = "temperature";
+  d["value"] = data.temperature;
+  d["unit"] = "C";
+  arr.push_back(d);
+
+  d["field"] = "pressure";
+  d["value"] = data.pressure;
+  d["unit"] = "Pa";
+  arr.push_back(d);
+
+  d["field"] = "humidity";
+  d["value"] = data.humidity;
+  d["unit"] = "%";
+  arr.push_back(d);
+
+  d["field"] = "gasResistance";
+  d["value"] = data.gas_resistance;
+  d["unit"] = "ohm";
+  arr.push_back(d);
+
   json j;
-  j["timestamp"] = TimeHelper::getUnixTimestamp();
-  j["temperature"] = data.temperature;
-  j["pressure"] = data.pressure;
-  j["humidity"] = data.humidity;
-  j["gasResistance"] = data.gas_resistance;
+  j["sensorId"] = id;
+  j["timestamp"] = timestamp;
+  j["data"] = arr;
+
   return j.dump();
 }
 
@@ -113,7 +138,7 @@ void publisher(void* params) {
   for (;;)
   {
     if(xQueueReceive(bmeDataQueue, &bmeData, 0)) {
-      err_t err = mqttClient->publish(string("data/home/indoor/airQuality"), jsonStringify(bmeData));
+      err_t err = mqttClient->publish(string("data/home/indoor/airQuality"), preparePayload(bmeData));
     }
     vTaskDelay(1000);
   }
@@ -140,7 +165,7 @@ void mainTask(void *params) {
   TaskHandle_t statusMonitorTaskHandle;
   TaskHandle_t bmeReaderTaskHandle;
 
-  xTaskCreate(publisher, "publisher", configMINIMAL_STACK_SIZE * 2, &mqttClient, PUBLISHER_TSK_P, &publisherTaskHandle);
+  xTaskCreate(publisher, "publisher", configMINIMAL_STACK_SIZE * 4, &mqttClient, PUBLISHER_TSK_P, &publisherTaskHandle);
   xTaskCreate(statusMonitor, "statusMonitor", configMINIMAL_STACK_SIZE, &mqttClient, STATUS_MONITOR_TSK_P, &statusMonitorTaskHandle);
   xTaskCreate(bmeReader, "bmeReader", configMINIMAL_STACK_SIZE, NULL, BME_READER_TSK_P, &bmeReaderTaskHandle);
 
